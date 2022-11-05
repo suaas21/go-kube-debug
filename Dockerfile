@@ -22,7 +22,8 @@ COPY . ${SRC_DIR}
 # Build App
 RUN ./build.sh
 
-# Defining App image
+
+## Defining App image
 FROM alpine:latest
 
 RUN apk add --no-cache --update ca-certificates
