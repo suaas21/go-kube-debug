@@ -1,0 +1,1 @@
+This repository contains samples for how to work with Go and Docker from GoLand IDE.
