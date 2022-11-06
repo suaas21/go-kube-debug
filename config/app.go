@@ -39,7 +39,13 @@ func loadApp(fileName string) error {
 
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
-		log.Fatalf("Config file changed, event: %v", e.Name)
+		if appConfig != nil {
+			appConfig.Host = viper.GetString("app.host")
+			appConfig.Port = viper.GetInt("app.port")
+			appConfig.GracefulTimeout = viper.GetInt("app.graceful_timeout")
+			appConfig.DebugPort = viper.GetInt("app.debug_port")
+		}
+		log.Printf("Config file changed, event: %v", e.Name)
 	})
 
 	return nil
