@@ -15,11 +15,35 @@ spec:
     spec:
       containers:
         - name: godebug
+          args:
+          - -c
+          - /godebug serve --config /etc/godebug/config.yaml
+          command:
+          - /bin/sh
           image: godebug:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 8000
-            - containerPort: 8005
+#            - containerPort: 8005
+          volumeMounts:
+          - mountPath: /etc/godebug
+            name: godebug-config
+      volumes:
+      - name: godebug-config
+        secret:
+          secretName: godebug-config
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: godebug-config
+type: Opaque
+stringData:
+  config.yaml: |
+    app:
+      port: 8000
+      debug_port: 8005
+      graceful_timeout: 30
 ---
 apiVersion: v1
 kind: Service
@@ -34,9 +58,15 @@ spec:
       port: 8000
       targetPort: 8000
       nodePort: 30800
-    - name: 8005-tcp
-      port: 8005
-      targetPort: 8005
-      nodePort: 30805
+#    - name: 8005-tcp
+#      port: 8005
+#      targetPort: 8005
+#      nodePort: 30805
   selector:
     app: godebug
+
+
+#app:
+#  port: 8000
+#  debug_port: 8005
+#  graceful_timeout: 30
