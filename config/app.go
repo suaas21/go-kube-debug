@@ -39,7 +39,7 @@ func loadApp(fileName string) error {
 
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
-		log.Fatalf("Config file changed, event: %v", e.Name)
+		log.Printf("Config file changed, event: %v", e.Name)
 	})
 
 	return nil
