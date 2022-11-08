@@ -35,5 +35,5 @@ COPY config.yaml /
 
 EXPOSE 8000 8005
 
-CMD ["/dlv", "--listen=:8005", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "/godebug", "--", "serve", "-c", "/config.yaml"]
+CMD ["/dlv", "--listen=:8005", "--continue", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "/godebug", "--", "serve", "-c", "/config.yaml"]
 #CMD ["/godebug", "serve", "-c", "/config.yaml"]
