@@ -14,6 +14,9 @@ type Application struct {
 	Port            int    `yaml:"port"`
 	DebugPort       int    `yaml:"debug_port"`
 	GracefulTimeout int    `yaml:"graceful_timeout"`
+	OCAgentHost     string `yaml:"oc_agent_host"`
+	RequestPort     int    `yaml:"request_port"`
+	Svc             string `yaml:"svc"`
 }
 
 var appOnce = sync.Once{}
@@ -33,6 +36,9 @@ func loadApp(fileName string) error {
 		GracefulTimeout: viper.GetInt("app.graceful_timeout"),
 		Port:            viper.GetInt("app.port"),
 		DebugPort:       viper.GetInt("app.debug_port"),
+		OCAgentHost:     viper.GetString("tracing.oc_agent_host"),
+		RequestPort:     viper.GetInt("request.port"),
+		Svc:             viper.GetString("request.svc"),
 	}
 
 	log.Println("app config ", appConfig)

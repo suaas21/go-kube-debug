@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: godebug
+  name: godebug
+spec:
+  selector:
+    matchLabels:
+      app: godebug
+  template:
+    metadata:
+      labels:
+        app: godebug
+    spec:
+      containers:
+      - name: godebug
+        image: godebug:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        - containerPort: 8005
+        command:
+        - "/dlv"
+        - "--listen=:8005"
+        - "--continue"
+        - "--headless=true"
+        - "--api-version=2"
+        - "--accept-multiclient"
+        - "exec"
+        - "/godebug"
+        - "--"
+        - "serve"
+        - "-c"
+        - "/config.yaml"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: godebug
+  name: godebug
+spec:
+  type: NodePort
+  ports:
+    - name: 8000-tcp
+      port: 8000
+      targetPort: 8000
+    - name: 8005-tcp
+      port: 8005
+      targetPort: 8005
+  selector:
+    app: godebug
+#---
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: godebug
+#spec:
+#  ingressClassName: kong
+#  rules:
+#  - http:
+#      paths:
+#      - pathType: Prefix
+#        path: "/"
+#        backend:
+#          service:
+#            name: godebug
+#            port:
+#              number: 8000
