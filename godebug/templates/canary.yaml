@@ -2,6 +2,7 @@ apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
   name: {{ include "godebug.fullname" . }}
+  namespace: default
   labels:
     {{- include "godebug.labels" . | nindent 4 }}
 spec:
