@@ -3,14 +3,10 @@ kind: ServiceMonitor
 metadata:
   name: godebug
   labels:
-    app: godebug
+    release: prometheus
 spec:
   selector:
     matchLabels:
       app: godebug
-  namespaceSelector:
-    # matchNames:
-    # - demo
-    any: true
   endpoints:
     - port: 8000-tcp
