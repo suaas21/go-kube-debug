@@ -8,5 +8,9 @@ spec:
   selector:
     matchLabels:
       app: godebug
+  namespaceSelector:
+    # matchNames:
+    # - demo
+    any: true
   endpoints:
     - port: 8000-tcp
