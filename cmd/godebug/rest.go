@@ -3,7 +3,11 @@ package main
 import (
 	"contrib.go.opencensus.io/exporter/ocagent"
 	"fmt"
+	"github.com/go-chi/chi"
+	debugChi "github.com/godebug/chi"
 	"github.com/godebug/config"
+	debugCtx "github.com/godebug/context"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
@@ -28,6 +32,12 @@ func serve(cmd *cobra.Command, args []string) error {
 	// Set the flags for the logging package to give us the filename in the logs
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
+	r := chi.NewMux()
+
+	prom := debugCtx.NewProm("godebug").Histogram(nil)
+	r.Use(debugChi.Use(prom))
+	r.Mount("/metrics", promhttp.Handler())
+
 	oce, err := ocagent.NewExporter(
 		ocagent.WithInsecure(),
 		ocagent.WithReconnectionPeriod(5*time.Second),
@@ -37,23 +47,21 @@ func serve(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	trace.RegisterExporter(oce)
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	//trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
-	handle("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = fmt.Fprintf(w, `api ok!!`)
-	})
+	r.Get("/env", cfgApp.Env)
+	r.Get("/", cfgApp.Ok)
 
-	handle("/env", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = fmt.Fprintf(w, `environment varialbe are: %v!`, cfgApp)
-	})
-
-	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.Port), nil)
-}
-
-func handle(path string, h func(w http.ResponseWriter, r *http.Request)) {
-	http.Handle(path, &ochttp.Handler{
-		Handler: http.HandlerFunc(h),
+	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.Port), &ochttp.Handler{
+		Handler: r,
+		GetStartOptions: func(r *http.Request) trace.StartOptions {
+			if r.Method == http.MethodOptions || r.URL.Path == "/metrics" {
+				return trace.StartOptions{
+					Sampler:  trace.NeverSample(),
+					SpanKind: trace.SpanKindServer,
+				}
+			}
+			return trace.StartOptions{}
+		},
 	})
 }

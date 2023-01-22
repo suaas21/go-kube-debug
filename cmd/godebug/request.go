@@ -3,10 +3,14 @@ package main
 import (
 	"contrib.go.opencensus.io/exporter/ocagent"
 	"fmt"
+	"github.com/go-chi/chi"
+	debug_chi "github.com/godebug/chi"
 	"github.com/godebug/config"
+	"github.com/godebug/context"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
+	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -28,6 +32,14 @@ func request(cmd *cobra.Command, args []string) error {
 	// Set the flags for the logging package to give us the filename in the logs
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
+	r := chi.NewMux()
+
+	prom := context.NewProm("godebug").Histogram(nil)
+	// set middleware for chi
+	r.Use(debug_chi.Use(prom))
+	// define /metrics endpoint to expose prometheus metrics
+	r.Mount("/metrics", promhttp.Handler())
+
 	oce, err := ocagent.NewExporter(
 		ocagent.WithInsecure(),
 		ocagent.WithReconnectionPeriod(5*time.Second),
@@ -37,37 +49,21 @@ func request(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	trace.RegisterExporter(oce)
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	//trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
-	handle("/request", func(w http.ResponseWriter, r *http.Request) {
-		for i := 0; i < 100; i++ {
-			svc := fmt.Sprintf("http://%s", cfgApp.Svc)
-			if i%2 == 0 {
-				svc = fmt.Sprintf("%s/env", svc)
+	r.Get("/request", cfgApp.Request)
+
+	// serve http octhttp handler
+	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.RequestPort), &ochttp.Handler{
+		Handler: r,
+		GetStartOptions: func(r *http.Request) trace.StartOptions {
+			if r.Method == http.MethodOptions || r.URL.Path == "/metrics" {
+				return trace.StartOptions{
+					Sampler:  trace.NeverSample(),
+					SpanKind: trace.SpanKindServer,
+				}
 			}
-			err := GetRequest(svc)
-			if err != nil {
-				log.Fatalf(err.Error())
-			}
-		}
-		w.WriteHeader(http.StatusOK)
-		_, _ = fmt.Fprintf(w, `request config info: %v!`, cfgApp)
+			return trace.StartOptions{}
+		},
 	})
-
-	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.RequestPort), nil)
-}
-
-func GetRequest(url string) error {
-	c := http.Client{Timeout: time.Duration(5) * time.Second}
-	resp, err := c.Get(fmt.Sprintf("%s", url))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	log.Printf("Body : %s", body)
-	return nil
 }

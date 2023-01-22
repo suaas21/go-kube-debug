@@ -59,12 +59,13 @@ spec:
 #spec:
 #  ingressClassName: kong
 #  rules:
-#  - http:
+#  - host: godebug.xyz
+#    http:
 #      paths:
-#      - pathType: Prefix
-#        path: "/"
-#        backend:
-#          service:
-#            name: godebug
-#            port:
-#              number: 8000
+#        - pathType: Prefix
+#          path: "/"
+#          backend:
+#            service:
+#              name: godebug
+#              port:
+#                number: 8000

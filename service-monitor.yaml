@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: godebug
+  labels:
+    app: godebug
+spec:
+  selector:
+    matchLabels:
+      app: godebug
+  endpoints:
+    - port: 8000-tcp
