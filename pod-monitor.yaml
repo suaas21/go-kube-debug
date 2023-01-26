@@ -6,7 +6,12 @@ metadata:
   labels:
     release: prometheus
 spec:
-#  selector:
+  selector:
+    matchExpressions:
+      - key: type
+        operator: In
+        values:
+          - "*"
 #    matchLabels:
 #      linkerd.io/control-plane-ns: linkerd
   namespaceSelector:
