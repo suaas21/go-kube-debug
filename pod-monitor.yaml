@@ -18,9 +18,9 @@ spec:
     matchNames:
     - linkerd
     - linkerd-viz
-#  podMetricsEndpoints:
-#  - honorLabels: true
-#    interval: 10s
+  podMetricsEndpoints:
+  - honorLabels: true
+    interval: 10s
 #    relabelings:
 #    - sourceLabels:
 #      - __meta_kubernetes_pod_container_port_name
