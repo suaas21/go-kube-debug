@@ -47,7 +47,6 @@ func serve(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	trace.RegisterExporter(oce)
-	//trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	r.Get("/env", cfgApp.Env)
 	r.Get("/", cfgApp.Ok)

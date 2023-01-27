@@ -2,7 +2,6 @@ package responses
 
 import (
 	"encoding/json"
-	"go.opencensus.io/trace"
 	"net/http"
 )
 
@@ -16,10 +15,6 @@ type Response struct {
 func ServeJSON(w http.ResponseWriter, status int, msg string, data interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-
-	if status >= 200 && status < 300 {
-		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
-	}
 
 	resp := &Response{
 		Status:  status,

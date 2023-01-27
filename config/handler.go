@@ -18,6 +18,7 @@ func (c *Application) Env(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Application) Request(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("..........request loop started....................")
 	for i := 0; i < 100; i++ {
 		svc := fmt.Sprintf("http://%s", c.Svc)
 		if i%2 == 0 {
@@ -33,6 +34,7 @@ func (c *Application) Request(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetRequest(url string) error {
+	fmt.Println("----------request individual started.............")
 	c := http.Client{Timeout: time.Duration(5) * time.Second}
 	resp, err := c.Get(fmt.Sprintf("%s", url))
 	if err != nil {
