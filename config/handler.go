@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/godebug/responses"
+	"go.opencensus.io/plugin/ochttp"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -35,7 +36,11 @@ func (c *Application) Request(w http.ResponseWriter, r *http.Request) {
 
 func GetRequest(url string) error {
 	fmt.Println("----------request individual started.............")
-	c := http.Client{Timeout: time.Duration(5) * time.Second}
+	c := &http.Client{
+		Transport: &ochttp.Transport{},
+		Timeout:   time.Duration(5) * time.Second,
+	}
+	//c := http.Client{Timeout: time.Duration(5) * time.Second}
 	resp, err := c.Get(fmt.Sprintf("%s", url))
 	if err != nil {
 		return err
