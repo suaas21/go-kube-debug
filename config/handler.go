@@ -48,3 +48,15 @@ func GetRequest(url string) error {
 	log.Printf("Body : %s", body)
 	return nil
 }
+
+func (c *Application) Req(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("..................req..........................")
+	svc := fmt.Sprintf("http://%s/request", c.ReqSvc)
+	err := GetRequest(svc)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = fmt.Fprintf(w, `request config info: %v!`, c)
+}

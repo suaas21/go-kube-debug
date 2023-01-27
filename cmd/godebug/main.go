@@ -19,6 +19,7 @@ func init() {
 	// Here all other sub commands should be registered to the rootCmd
 	rootCmd.AddCommand(srvCmd)
 	rootCmd.AddCommand(requestCmd)
+	rootCmd.AddCommand(reqCmd)
 }
 
 func main() {

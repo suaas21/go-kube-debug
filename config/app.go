@@ -17,6 +17,8 @@ type Application struct {
 	OCAgentHost     string `yaml:"oc_agent_host"`
 	RequestPort     int    `yaml:"request_port"`
 	Svc             string `yaml:"svc"`
+	ReqSvc          string `yaml:"req_svc"`
+	ReqPort         int    `yaml:"req_port"`
 }
 
 var appOnce = sync.Once{}
@@ -39,6 +41,8 @@ func loadApp(fileName string) error {
 		OCAgentHost:     viper.GetString("tracing.oc_agent_host"),
 		RequestPort:     viper.GetInt("request.port"),
 		Svc:             viper.GetString("request.svc"),
+		ReqSvc:          viper.GetString("req.svc"),
+		ReqPort:         viper.GetInt("req.port"),
 	}
 
 	log.Println("app config ", appConfig)

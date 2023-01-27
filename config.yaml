@@ -10,4 +10,8 @@ request:
   port: 9000
   svc: godebug.default:8000
 
+req:
+  port: 6000
+  svc: request.default:9000
+
 
