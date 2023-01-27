@@ -48,5 +48,8 @@ func req(cmd *cobra.Command, args []string) error {
 	// serve http octhttp handler
 	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.ReqPort), &ochttp.Handler{
 		Handler: r,
+		GetStartOptions: func(r *http.Request) trace.StartOptions {
+			return trace.StartOptions{}
+		},
 	})
 }
