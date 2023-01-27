@@ -7,6 +7,7 @@ import (
 	"github.com/godebug/config"
 	"github.com/spf13/cobra"
 	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/plugin/ochttp/propagation/b3"
 	"go.opencensus.io/trace"
 	"log"
 	"net/http"
@@ -51,5 +52,6 @@ func req(cmd *cobra.Command, args []string) error {
 		GetStartOptions: func(r *http.Request) trace.StartOptions {
 			return trace.StartOptions{}
 		},
+		Propagation: &b3.HTTPFormat{},
 	})
 }
