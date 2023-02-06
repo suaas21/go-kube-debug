@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: member
+  name: member
+spec:
+  selector:
+    matchLabels:
+      app: member
+  template:
+    metadata:
+      labels:
+        app: member
+    spec:
+      containers:
+        - name: member
+          image: godebug:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+            - containerPort: 5005
+          command:
+            - "/dlv"
+            - "--listen=:5005"
+            - "--continue"
+            - "--headless=true"
+            - "--api-version=2"
+            - "--accept-multiclient"
+            - "exec"
+            - "/godebug"
+            - "--"
+            - "member"
+            - "-c"
+            - "/config.yaml"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: member
+  name: member
+spec:
+  type: NodePort
+  ports:
+    - name: 5000-tcp
+      port: 5000
+      targetPort: 5000
+    - name: 5005-tcp
+      port: 5005
+      targetPort: 5005
+  selector:
+    app: member

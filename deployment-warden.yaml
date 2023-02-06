@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: warden
+  name: warden
+spec:
+  selector:
+    matchLabels:
+      app: warden
+  template:
+    metadata:
+      labels:
+        app: warden
+    spec:
+      containers:
+      - name: warden
+        image: godebug:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 4000
+        - containerPort: 4005
+        command:
+        - "/dlv"
+        - "--listen=:4005"
+        - "--continue"
+        - "--headless=true"
+        - "--api-version=2"
+        - "--accept-multiclient"
+        - "exec"
+        - "/godebug"
+        - "--"
+        - "warden"
+        - "-c"
+        - "/config.yaml"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: warden
+  name: warden
+spec:
+  type: NodePort
+  ports:
+    - name: 4000-tcp
+      port: 4000
+      targetPort: 4000
+    - name: 4005-tcp
+      port: 4005
+      targetPort: 4005
+  selector:
+    app: warden
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: warden
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: warden
+                port:
+                  name: 4000-tcp

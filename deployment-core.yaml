@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: core
+  name: core
+spec:
+  selector:
+    matchLabels:
+      app: core
+  template:
+    metadata:
+      labels:
+        app: core
+    spec:
+      containers:
+        - name: core
+          image: godebug:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          command:
+            - "/godebug"
+            - "core"
+            - "-c"
+            - "/config.yaml"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: core
+  name: core
+spec:
+  type: NodePort
+  ports:
+    - name: 8000-tcp
+      port: 8000
+      targetPort: 8000
+  selector:
+    app: core

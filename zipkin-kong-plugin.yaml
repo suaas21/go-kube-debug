@@ -1,0 +1,9 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: set-l5d-header
+plugin: request-transformer
+config:
+  add:
+    headers:
+      - l5d-dst-override:$(headers.host).svc.cluster.local

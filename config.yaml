@@ -1,13 +1,26 @@
-app:
-  port: 8000
-  debug_port: 8005
-  graceful_timeout: 30
-
 tracing:
   oc_agent_host: collector.linkerd-jaeger:55678
 
-request:
-  port: 9000
-  svc: godebug.default:8000
+warden:
+  port: 4000
+  debug_port: 4005
+  member_svc: member.default:5000
+
+member:
+  port: 5000
+  setting_svc: setting.default:6000
+
+setting:
+  port: 6000
+  settlement_svc: settlement.default:7000
+
+settlement:
+  port: 7000
+  core_svc: core.default:8000
+
+core:
+  port: 8000
+
+
 
 

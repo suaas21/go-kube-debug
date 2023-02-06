@@ -4,8 +4,8 @@ import (
 	"contrib.go.opencensus.io/exporter/ocagent"
 	"fmt"
 	"github.com/go-chi/chi"
+	"github.com/godebug/app"
 	debugChi "github.com/godebug/chi"
-	"github.com/godebug/config"
 	debugCtx "github.com/godebug/context"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -16,42 +16,45 @@ import (
 	"time"
 )
 
-// srvCmd is the serve sub command to start the api server
-var srvCmd = &cobra.Command{
-	Use:   "serve",
-	Short: "serve serves the api server",
-	RunE:  serve,
+// settingCmd is the serve sub command to start the api server
+var settingCmd = &cobra.Command{
+	Use:   "setting",
+	Short: "setting serves the api server",
+	RunE:  setting,
 }
 
 func init() {
-	srvCmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "", "config file path")
+	settingCmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "", "config file path")
 }
 
-func serve(cmd *cobra.Command, args []string) error {
-	cfgApp := config.GetApp(cfgPath)
+func setting(cmd *cobra.Command, args []string) error {
+	cfgApp := app.GetApp(cfgPath)
+	// define service name
+	cfgApp.Service = app.ServiceSetting
 	// Set the flags for the logging package to give us the filename in the logs
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	r := chi.NewMux()
 
-	prom := debugCtx.NewProm("godebug").Histogram(nil)
+	// Add custom prometheus
+	prom := debugCtx.NewProm(app.ServiceSetting).Histogram(nil)
 	r.Use(debugChi.Use(prom))
 	r.Mount("/metrics", promhttp.Handler())
 
+	// Add tracing data exporter
 	oce, err := ocagent.NewExporter(
 		ocagent.WithInsecure(),
 		ocagent.WithReconnectionPeriod(5*time.Second),
 		ocagent.WithAddress(cfgApp.OCAgentHost),
-		ocagent.WithServiceName("godebug"))
+		ocagent.WithServiceName(app.ServiceSetting))
 	if err != nil {
 		return err
 	}
 	trace.RegisterExporter(oce)
 
-	r.Get("/env", cfgApp.Env)
-	r.Get("/", cfgApp.Ok)
+	r.Get("/", cfgApp.Serve)
 
-	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.Port), &ochttp.Handler{
+	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.SettingPort), &ochttp.Handler{
 		Handler: r,
 		GetStartOptions: func(r *http.Request) trace.StartOptions {
 			if r.Method == http.MethodOptions || r.URL.Path == "/metrics" {

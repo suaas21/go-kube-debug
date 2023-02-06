@@ -17,8 +17,11 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	// Here all other sub commands should be registered to the rootCmd
-	rootCmd.AddCommand(srvCmd)
-	rootCmd.AddCommand(requestCmd)
+	rootCmd.AddCommand(settingCmd)
+	rootCmd.AddCommand(memberCmd)
+	rootCmd.AddCommand(wardenCmd)
+	rootCmd.AddCommand(settlementCmd)
+	rootCmd.AddCommand(coreCmd)
 }
 
 func main() {

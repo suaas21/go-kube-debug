@@ -4,8 +4,8 @@ import (
 	"contrib.go.opencensus.io/exporter/ocagent"
 	"fmt"
 	"github.com/go-chi/chi"
+	"github.com/godebug/app"
 	debug_chi "github.com/godebug/chi"
-	"github.com/godebug/config"
 	"github.com/godebug/context"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -16,25 +16,27 @@ import (
 	"time"
 )
 
-// requestCmd is the request sub command to request api server
-var requestCmd = &cobra.Command{
-	Use:   "request",
-	Short: "request to the api server",
-	RunE:  request,
+// coreCmd is the godebug sub command to server
+var coreCmd = &cobra.Command{
+	Use:   "core",
+	Short: "core to the api server",
+	RunE:  core,
 }
 
 func init() {
-	requestCmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "", "config file path")
+	coreCmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "", "config file path")
 }
 
-func request(cmd *cobra.Command, args []string) error {
-	cfgApp := config.GetApp(cfgPath)
+func core(cmd *cobra.Command, args []string) error {
+	cfgApp := app.GetApp(cfgPath)
+	// define service name
+	cfgApp.Service = app.ServiceCore
 	// Set the flags for the logging package to give us the filename in the logs
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	r := chi.NewMux()
 
-	prom := context.NewProm("godebug").Histogram(nil)
+	prom := context.NewProm(app.ServiceCore).Histogram(nil)
 	// set middleware for chi
 	r.Use(debug_chi.Use(prom))
 	// define /metrics endpoint to expose prometheus metrics
@@ -44,17 +46,17 @@ func request(cmd *cobra.Command, args []string) error {
 		ocagent.WithInsecure(),
 		ocagent.WithReconnectionPeriod(5*time.Second),
 		ocagent.WithAddress(cfgApp.OCAgentHost),
-		ocagent.WithServiceName("request"))
+		ocagent.WithServiceName(app.ServiceCore))
 	if err != nil {
 		return err
 	}
 	trace.RegisterExporter(oce)
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	// if ingress is not specified for root span then undo the below line
+	//trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
-	r.Get("/request", cfgApp.Request)
+	r.Get("/", cfgApp.Serve)
 
-	// serve http octhttp handler
-	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.RequestPort), &ochttp.Handler{
+	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.CorePort), &ochttp.Handler{
 		Handler: r,
 		GetStartOptions: func(r *http.Request) trace.StartOptions {
 			if r.Method == http.MethodOptions || r.URL.Path == "/metrics" {

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: settlement
+  name: settlement
+spec:
+  selector:
+    matchLabels:
+      app: settlement
+  template:
+    metadata:
+      labels:
+        app: settlement
+    spec:
+      containers:
+        - name: settlement
+          image: godebug:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 7000
+          command:
+            - "/godebug"
+            - "settlement"
+            - "-c"
+            - "/config.yaml"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: settlement
+  name: settlement
+spec:
+  type: NodePort
+  ports:
+    - name: 7000-tcp
+      port: 7000
+      targetPort: 7000
+  selector:
+    app: settlement

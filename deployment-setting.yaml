@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: setting
+  name: setting
+spec:
+  selector:
+    matchLabels:
+      app: setting
+  template:
+    metadata:
+      labels:
+        app: setting
+    spec:
+      containers:
+      - name: setting
+        image: godebug:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 6000
+        command:
+        - "/godebug"
+        - "setting"
+        - "-c"
+        - "/config.yaml"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: setting
+  name: setting
+spec:
+  type: NodePort
+  ports:
+    - name: 6000-tcp
+      port: 6000
+      targetPort: 6000
+  selector:
+    app: setting
