@@ -1,0 +1,27 @@
+kafkaSchema:
+  name: kafka-schema-creator
+  backoffLimit: 0
+  image:
+    name: busybox
+    tag: develop-885977e
+    pullPolicy: IfNotPresent
+  restartPolicy: Never
+  secretName: minio-secret
+kafkaTopics:
+  name: kafka-topics-creator
+  backoffLimit: 0
+  image:
+    name: docker.io/bitnami/kafka
+    tag: 3.4.0-debian-11-r15
+    pullPolicy: IfNotPresent
+  restartPolicy: Never
+  config:
+    kafkaBootStrapServer: kafka.kafka.svc.cluster.local:9092
+    topicReplicationFactor: 1
+    topicPartitions: 1
+    topics:
+    - "z2222"
+    - "x33333"
+    - "v44444"
+
+

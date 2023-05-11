@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.kafkaSchema.name }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: {{.Values.kafkaSchema.backoffLimit }}
+  template:
+    metadata:
+      name: {{ .Values.kafkaSchema.name }}
+    spec:
+      containers:
+        - name: {{ .Values.kafkaSchema.name }}
+          image: {{ .Values.kafkaSchema.image.name }}:{{ .Values.kafkaSchema.image.tag }}
+          imagePullPolicy: {{ .Values.kafkaSchema.image.pullPolicy }}
+          env:
+            - name: POSTMAN_COLLECTION_PATH
+              value: "/user/app/kafka-schema-dev.postman_collection.json"
+            - name: POSTMAN_ENV_PATH
+              value: "/user/app/workspace.postman_globals.json"
+            - name: REPORT_NAME
+              value: "report-{{ .Values.kafkaSchema.image.tag }}-{{.Release.Revision}}.html"
+            - name: MINIO_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.kafkaSchema.secretName}}
+                  key: MINIO_ENDPOINT
+            - name: MINIO_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.kafkaSchema.secretName}}
+                  key: MINIO_PORT
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.kafkaSchema.secretName}}
+                  key: MINIO_ACCESS_KEY
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.kafkaSchema.secretName}}
+                  key: MINIO_SECRET_KEY
+            - name: BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.kafkaSchema.secretName}}
+                  key: BUCKET
+      restartPolicy: Never

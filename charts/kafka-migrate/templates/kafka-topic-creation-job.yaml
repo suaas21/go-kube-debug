@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.kafkaTopics.name }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-2"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: {{.Values.kafkaTopics.backoffLimit }}
+  template:
+    metadata:
+      name: {{ .Values.kafkaTopics.name }}
+    spec:
+      initContainers:
+        - name: kafka-checker
+          image: {{ .Values.kafkaTopics.image.name }}:{{ .Values.kafkaTopics.image.tag }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "[INFO] Checking to see if Kafka broker is up..."
+              i=0
+              while [[ "$(/opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server={{.Values.kafkaTopics.config.kafkaBootStrapServer}} --list > /dev/null; echo $?)" != 0 ]] ; do
+                echo "[INFO] Kafka broker {{.Values.kafkaTopics.config.kafkaBootStrapServer}} is not available yet"
+                sleep 5
+                if [[ "$i" == '20' ]]
+                then
+                  echo "[INFO] kafka broker is not alive"
+                  exit 1
+                fi
+                ((i++))
+              done
+              echo "[INFO] kafka broker is alive and running"
+      containers:
+        - name: {{ .Values.kafkaTopics.name }}
+          image: {{ .Values.kafkaTopics.image.name }}:{{ .Values.kafkaTopics.image.tag }}
+          imagePullPolicy: {{ .Values.kafkaTopics.image.pullPolicy }}
+          env:
+            - name: BOOTSTRAP_SERVER
+              value: {{ .Values.kafkaTopics.config.kafkaBootStrapServer | quote }}
+            - name: REPLICATION_FACTOR
+              value: {{ .Values.kafkaTopics.config.topicReplicationFactor |quote }}
+            - name: PARTITIONS
+              value: {{ .Values.kafkaTopics.config.topicPartitions |quote }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              {{- range .Values.kafkaTopics.config.topics}}
+              /opt/bitnami/kafka/bin/kafka-topics.sh --create --bootstrap-server ${BOOTSTRAP_SERVER} --replication-factor ${REPLICATION_FACTOR} --partitions ${PARTITIONS} --topic {{.}}  --if-not-exists
+              {{- end}}
+              echo "Topic creation completed."
+      restartPolicy: {{ .Values.kafkaTopics.restartPolicy }}
