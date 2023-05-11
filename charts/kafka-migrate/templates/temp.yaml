@@ -14,4 +14,4 @@ spec:
       image: busybox
       ports:
         - containerPort: 80
-      command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 5 ; done"]
+      command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 100 ; done"]
