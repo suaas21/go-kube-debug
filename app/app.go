@@ -10,7 +10,7 @@ import (
 
 // Application holds application configurations
 type Application struct {
-	OCAgentHost string
+	OTLEndpoint string
 
 	WardenPort      int
 	WardenDebugPort int
@@ -43,7 +43,7 @@ func loadApp(fileName string) error {
 	viper.AutomaticEnv()
 
 	appConfig = &Application{
-		OCAgentHost: viper.GetString("tracing.oc_agent_host"),
+		OTLEndpoint: viper.GetString("otl.otel_exporter_otlp_endpoint"),
 
 		WardenPort:      viper.GetInt("warden.port"),
 		WardenDebugPort: viper.GetInt("warden.debug_port"),

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"contrib.go.opencensus.io/exporter/ocagent"
+	"context"
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/godebug/app"
@@ -9,11 +9,8 @@ import (
 	debugCtx "github.com/godebug/context"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
-	"go.opencensus.io/plugin/ochttp"
-	"go.opencensus.io/trace"
 	"log"
 	"net/http"
-	"time"
 )
 
 // settingCmd is the serve sub command to start the api server
@@ -34,6 +31,9 @@ func setting(cmd *cobra.Command, args []string) error {
 	// Set the flags for the logging package to give us the filename in the logs
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
+	cleanup := initTracer("true", cfgApp.OTLEndpoint, cfgApp.Service)
+	defer cleanup(context.Background())
+
 	r := chi.NewMux()
 
 	// Add custom prometheus
@@ -41,29 +41,7 @@ func setting(cmd *cobra.Command, args []string) error {
 	r.Use(debugChi.Use(prom))
 	r.Mount("/metrics", promhttp.Handler())
 
-	// Add tracing data exporter
-	oce, err := ocagent.NewExporter(
-		ocagent.WithInsecure(),
-		ocagent.WithReconnectionPeriod(5*time.Second),
-		ocagent.WithAddress(cfgApp.OCAgentHost),
-		ocagent.WithServiceName(app.ServiceSetting))
-	if err != nil {
-		return err
-	}
-	trace.RegisterExporter(oce)
-
 	r.Get("/", cfgApp.Serve)
 
-	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.SettingPort), &ochttp.Handler{
-		Handler: r,
-		GetStartOptions: func(r *http.Request) trace.StartOptions {
-			if r.Method == http.MethodOptions || r.URL.Path == "/metrics" {
-				return trace.StartOptions{
-					Sampler:  trace.NeverSample(),
-					SpanKind: trace.SpanKindServer,
-				}
-			}
-			return trace.StartOptions{}
-		},
-	})
+	return http.ListenAndServe(fmt.Sprintf(":%v", cfgApp.SettingPort), r)
 }

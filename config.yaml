@@ -1,5 +1,5 @@
-tracing:
-  oc_agent_host: collector.linkerd-jaeger:55678
+otl:
+  otel_exporter_otlp_endpoint: my-release-k8s-infra-otel-agent.platform:4317
 
 warden:
   port: 4000
